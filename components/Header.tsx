@@ -1,15 +1,19 @@
-"use client"
+"use client";
 
-import { Search, Menu, Satellite } from "lucide-react"
-import { motion } from "framer-motion"
+import { Search, Menu, Satellite } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface HeaderProps {
-  onSearch: (query: string) => void
-  searchQuery: string
-  onToggleDashboard: () => void
+  onSearch: (query: string) => void;
+  searchQuery: string;
+  onToggleDashboard: () => void;
 }
 
-export default function Header({ onSearch, searchQuery, onToggleDashboard }: HeaderProps) {
+export default function Header({
+  onSearch,
+  searchQuery,
+  onToggleDashboard,
+}: HeaderProps) {
   return (
     <motion.header
       initial={{ y: -64, opacity: 0 }}
@@ -30,8 +34,12 @@ export default function Header({ onSearch, searchQuery, onToggleDashboard }: Hea
             <Satellite className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-bold leading-tight text-foreground">Canadian Satellite Viz</h1>
-            <p className="text-xs text-muted-foreground">Real-time Orbital Tracking</p>
+            <h1 className="text-lg font-bold leading-tight text-foreground">
+              Canadian Satellite Viz
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Real-time Orbital Tracking
+            </p>
           </div>
         </div>
       </div>
@@ -49,12 +57,9 @@ export default function Header({ onSearch, searchQuery, onToggleDashboard }: Hea
 
       <div className="flex items-center gap-2">
         <div className="rounded-lg bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent">
-          {CANADIAN_SATELLITES.length} Active Satellites
+          Real-time Satellite Tracking
         </div>
       </div>
     </motion.header>
-  )
+  );
 }
-
-// Import for satellite count
-import { CANADIAN_SATELLITES } from "@/lib/canadianSatellites"

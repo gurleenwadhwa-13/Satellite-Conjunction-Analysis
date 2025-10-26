@@ -111,12 +111,14 @@ function generateMockConjunctions(): ConjunctionEvent[] {
     });
   });
 
-  // Sort by risk level (high to low) and then by probability (descending)
+  // Sort by collision risk (probability descending, then min range ascending)
   return events.sort((a, b) => {
-    const riskDiff =
-      getRiskPriority(b.riskLevel) - getRiskPriority(a.riskLevel);
-    if (riskDiff !== 0) return riskDiff;
-    return b.probability - a.probability;
+    // Primary sort: probability (descending - highest risk first)
+    const probDiff = b.probability - a.probability;
+    if (probDiff !== 0) return probDiff;
+
+    // Secondary sort: minimum range (ascending - closest first)
+    return a.minRange - b.minRange;
   });
 }
 
@@ -180,12 +182,14 @@ export async function GET(request: NextRequest) {
         "real conjunction events"
       );
 
-      // Sort by risk level (high to low) and then by probability (descending)
+      // Sort by collision risk (probability descending, then min range ascending)
       const sortedConjunctions = allConjunctions.sort((a, b) => {
-        const riskDiff =
-          getRiskPriority(b.riskLevel) - getRiskPriority(a.riskLevel);
-        if (riskDiff !== 0) return riskDiff;
-        return b.probability - a.probability;
+        // Primary sort: probability (descending - highest risk first)
+        const probDiff = b.probability - a.probability;
+        if (probDiff !== 0) return probDiff;
+
+        // Secondary sort: minimum range (ascending - closest first)
+        return a.minRange - b.minRange;
       });
 
       return NextResponse.json(sortedConjunctions);

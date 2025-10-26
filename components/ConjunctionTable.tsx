@@ -36,6 +36,15 @@ export default function ConjunctionTable({
     }
   };
 
+  // Convert probability to readable format (e.g., "1 in 75,000")
+  const formatProbability = (probability: number): string => {
+    if (probability <= 0) return "0";
+    if (probability >= 1) return "1 in 1";
+
+    const inverse = Math.round(1 / probability);
+    return `1 in ${inverse.toLocaleString()}`;
+  };
+
   // Group conjunctions by satellite
   const conjunctionsBySatellite = useMemo(() => {
     const grouped: Record<number, ConjunctionEvent[]> = {};
@@ -60,13 +69,15 @@ export default function ConjunctionTable({
       }
     });
 
-    // Sort conjunctions for each satellite by risk level (high to low) and then by probability (descending)
+    // Sort conjunctions for each satellite by collision risk (probability descending, then min range ascending)
     Object.keys(grouped).forEach((noradId) => {
       grouped[Number(noradId)].sort((a, b) => {
-        const riskDiff =
-          getRiskPriority(b.riskLevel) - getRiskPriority(a.riskLevel);
-        if (riskDiff !== 0) return riskDiff;
-        return b.probability - a.probability;
+        // Primary sort: probability (descending - highest risk first)
+        const probDiff = b.probability - a.probability;
+        if (probDiff !== 0) return probDiff;
+
+        // Secondary sort: minimum range (ascending - closest first)
+        return a.minRange - b.minRange;
       });
     });
 
@@ -110,7 +121,11 @@ export default function ConjunctionTable({
       </div>
 
       <Accordion type="single" collapsible className="w-full">
-        {CANADIAN_SATELLITES.map((satellite) => {
+        {CANADIAN_SATELLITES.sort((a, b) => {
+          const aConjunctions = conjunctionsBySatellite[a.noradId]?.length || 0;
+          const bConjunctions = conjunctionsBySatellite[b.noradId]?.length || 0;
+          return bConjunctions - aConjunctions; // Most conjunctions first
+        }).map((satellite) => {
           const satelliteConjunctions =
             conjunctionsBySatellite[satellite.noradId] || [];
 
@@ -207,7 +222,30 @@ export default function ConjunctionTable({
                               <span>Min Range</span>
                             </div>
                             <p className="mt-1 text-xs font-medium text-foreground font-mono">
-                              {conj.minRange.toFixed(2)} km
+                              {conj.minRange.toFixed(3)} km
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <div>
+                            <div className="text-xs text-muted-foreground">
+                              Dilution Threshold
+                            </div>
+                            <p className="mt-1 text-xs font-medium text-foreground font-mono">
+                              {conj.dilutionThreshold
+                                ? conj.dilutionThreshold.toFixed(3)
+                                : "N/A"}{" "}
+                              km
+                            </p>
+                          </div>
+
+                          <div>
+                            <div className="text-xs text-muted-foreground">
+                              Relative Speed
+                            </div>
+                            <p className="mt-1 text-xs font-medium text-foreground font-mono">
+                              {conj.relativeVelocity.toFixed(3)} km/s
                             </p>
                           </div>
                         </div>
@@ -217,7 +255,10 @@ export default function ConjunctionTable({
                             Collision Probability
                           </div>
                           <div className="mt-1 text-sm font-bold text-foreground font-mono">
-                            {(conj.probability * 100).toExponential(2)}%
+                            {formatProbability(conj.probability)}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            ({(conj.probability * 100).toExponential(2)}%)
                           </div>
                         </div>
                       </motion.div>

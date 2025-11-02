@@ -63,9 +63,7 @@ export default function GlobeComponent({
       alt: p.alt / EARTH_RADIUS_KM,
     }));
 
-    console.log(
-      `[Globe] Rendering continuous path with ${coords.length} points`
-    );
+    
 
     return [
       {

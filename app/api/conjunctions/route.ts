@@ -124,17 +124,12 @@ function generateMockConjunctions(): ConjunctionEvent[] {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("[v0 API] Fetching conjunction data...");
-
     // Use the actual CANADIAN_SATELLITES list directly
     const allConjunctions: any[] = [];
 
     // Fetch conjunctions for each Canadian satellite using their actual names
     for (const satellite of CANADIAN_SATELLITES) {
       try {
-        console.log(
-          `[v0 API] Fetching conjunctions for ${satellite.name} (NORAD ${satellite.noradId})`
-        );
         const csvData = await dataService.fetchConjunctionsFromCelestrak(
           satellite.name,
           satellite.noradId
@@ -145,26 +140,12 @@ export async function GET(request: NextRequest) {
             satellite.name,
             satellite.noradId
           );
-          console.log(
-            `[v0 API] Found ${conjunctions.length} conjunctions for ${satellite.name}`
-          );
           allConjunctions.push(...conjunctions);
         }
-      } catch (error) {
-        console.log(
-          `[v0 API] Failed to fetch conjunctions for ${satellite.name} (NORAD ${satellite.noradId}):`,
-          error
-        );
-      }
+      } catch (error) {}
     }
 
     if (allConjunctions.length > 0) {
-      console.log(
-        "[v0 API] Returning",
-        allConjunctions.length,
-        "real conjunction events"
-      );
-
       // Sort by collision risk (probability descending, then min range ascending)
       const sortedConjunctions = allConjunctions.sort((a, b) => {
         // Primary sort: probability (descending - highest risk first)
@@ -186,7 +167,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log("[v0 API] No real conjunction data available, using mock data");
     const mockConjunctions = generateMockConjunctions();
     return NextResponse.json(mockConjunctions, {
       headers: {
@@ -197,8 +177,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[v0 API] Error in conjunctions API:", error);
-    console.log("[v0 API] Error occurred, using mock data");
+    console.error("Error in conjunctions API:", error);
+
     const mockConjunctions = generateMockConjunctions();
     return NextResponse.json(mockConjunctions, {
       headers: {

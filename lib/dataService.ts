@@ -27,7 +27,6 @@ export class DataService {
       // Check cache first
       const cached = tleCache.get(noradId);
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        console.log(`[v0 DataService] Using cached TLE for NORAD ${noradId}`);
         return cached.data;
       }
 
@@ -35,10 +34,6 @@ export class DataService {
       if (!this.spaceTrackToken) {
         await this.authenticateSpaceTrack();
       }
-
-      console.log(
-        `[v0 DataService] Fetching TLE for NORAD ${noradId} from Space-Track.org`
-      );
 
       // Fetch TLE data
       const response = await axios.get(
@@ -63,9 +58,6 @@ export class DataService {
 
         // Cache the result
         tleCache.set(noradId, { data: satellite, timestamp: Date.now() });
-        console.log(
-          `[v0 DataService] Successfully fetched TLE for ${satellite.name}`
-        );
         return satellite;
       }
 
@@ -84,15 +76,10 @@ export class DataService {
     const password = process.env.SPACE_TRACK_PASSWORD;
 
     if (!username || !password) {
-      console.log(
-        "[v0 DataService] Space-Track credentials not configured, skipping authentication"
-      );
       throw new Error("Space-Track credentials not configured");
     }
 
     try {
-      console.log("[v0 DataService] Authenticating with Space-Track.org...");
-
       const response = await axios.post(
         "https://www.space-track.org/ajaxauth/login",
         new URLSearchParams({
@@ -115,9 +102,6 @@ export class DataService {
         );
         if (tokenCookie) {
           this.spaceTrackToken = tokenCookie.split("=")[1].split(";")[0];
-          console.log(
-            "[v0 DataService] Successfully authenticated with Space-Track.org"
-          );
         }
       }
     } catch (error) {
@@ -139,7 +123,7 @@ export class DataService {
   ): Promise<string | null> {
     try {
       console.log(
-        `[v0 DataService] Fetching conjunctions for ${satelliteName}${
+        `Fetching conjunctions for ${satelliteName}${
           noradId ? ` (NORAD ${noradId})` : ""
         } from Celestrak SOCRATES`
       );
@@ -157,18 +141,9 @@ export class DataService {
         }
       );
 
-      console.log(
-        `[v0 DataService] Successfully fetched conjunction data from Celestrak SOCRATES table`
-      );
-      console.log(
-        `[v0 DataService] Response length: ${response.data.length} characters`
-      );
       return response.data;
     } catch (error) {
-      console.error(
-        `[v0 DataService] Error fetching conjunctions for ${satelliteName}:`,
-        error
-      );
+      console.error(`Error fetching conjunctions for ${satelliteName}:`, error);
       return null;
     }
   }
@@ -184,10 +159,6 @@ export class DataService {
     const events: ConjunctionEvent[] = [];
 
     try {
-      console.log(
-        `[v0 DataService] Starting to parse HTML data, length: ${htmlData.length}`
-      );
-
       // Find all table rows with data
       const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
       let rowMatch;
@@ -262,15 +233,10 @@ export class DataService {
           }
         }
       }
-
-      console.log(`[v0 DataService] Found ${events.length} conjunction events`);
     } catch (error) {
       console.error("Error parsing SOCRATES HTML data:", error);
     }
 
-    console.log(
-      `Parsed ${events.length} conjunction events from SOCRATES data`
-    );
     return events;
   }
 
@@ -300,10 +266,6 @@ export class DataService {
   async fetchBatchTLE(noradIds: number[]): Promise<Map<number, Satellite>> {
     const results = new Map<number, Satellite>();
 
-    console.log(
-      `[v0 DataService] Fetching TLE data for ${noradIds.length} satellites in batch`
-    );
-
     // Process in parallel with rate limiting
     const batchSize = 5;
     for (let i = 0; i < noradIds.length; i += batchSize) {
@@ -323,9 +285,6 @@ export class DataService {
       }
     }
 
-    console.log(
-      `[v0 DataService] Successfully fetched ${results.size} TLE records`
-    );
     return results;
   }
 
@@ -343,10 +302,6 @@ export class DataService {
       21263, 40895, 39147, 39089,
     ];
 
-    console.log(
-      `[v0 DataService] Fetching ${targetIds.length} Canadian satellites individually from CelesTrak...`
-    );
-
     const satellites: Satellite[] = [];
     const now = Date.now();
 
@@ -354,7 +309,6 @@ export class DataService {
     for (const noradId of targetIds) {
       try {
         const url = `https://celestrak.org/NORAD/elements/gp.php?CATNR=${noradId}&FORMAT=tle`;
-        console.log(`[v0 DataService] Fetching NORAD ${noradId}...`);
 
         const { data } = await axios.get(url, {
           timeout: 10000,
@@ -381,7 +335,6 @@ export class DataService {
 
             satellites.push(satellite);
             tleCache.set(noradId, { data: satellite, timestamp: now });
-            console.log(`[v0 DataService] ✓ Fetched ${name}`);
           }
         } else {
           console.warn(
@@ -399,9 +352,6 @@ export class DataService {
       }
     }
 
-    console.log(
-      `[v0 DataService] Successfully fetched ${satellites.length} out of ${targetIds.length} satellites`
-    );
     return satellites;
   }
 }

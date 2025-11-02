@@ -35,17 +35,11 @@ export default function SatelliteViewer() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("[SatelliteViewer] Fetching satellite data from API...");
 
         const satellitesResponse = await fetch("/api/satellites");
         const satellitesData: Satellite[] = await satellitesResponse.json();
-        console.log(
-          "[SatelliteViewer] Fetched satellites:",
-          satellitesData.length
-        );
         setSatelliteData(satellitesData);
-
-        console.log("[SatelliteViewer] Fetching conjunction data from API...");
+        
         // Add cache-busting timestamp to ensure fresh data
         const conjunctionsResponse = await fetch("/api/conjunctions", {
           cache: "no-store",
@@ -55,10 +49,6 @@ export default function SatelliteViewer() {
         });
         const conjunctionsData: ConjunctionEvent[] =
           await conjunctionsResponse.json();
-        console.log(
-          "[SatelliteViewer] Fetched conjunctions:",
-          conjunctionsData.length
-        );
         setConjunctions(conjunctionsData);
 
         setTimeout(() => {
@@ -77,7 +67,6 @@ export default function SatelliteViewer() {
   useEffect(() => {
     const fetchConjunctions = async () => {
       try {
-        console.log("[SatelliteViewer] Refreshing conjunction data...");
         // Add cache-busting timestamp to ensure fresh data
         const conjunctionsResponse = await fetch("/api/conjunctions", {
           cache: "no-store",
@@ -87,10 +76,6 @@ export default function SatelliteViewer() {
         });
         const conjunctionsData: ConjunctionEvent[] =
           await conjunctionsResponse.json();
-        console.log(
-          "[SatelliteViewer] Refreshed conjunctions:",
-          conjunctionsData.length
-        );
         setConjunctions(conjunctionsData);
       } catch (error) {
         console.error(
@@ -127,9 +112,6 @@ export default function SatelliteViewer() {
         if (selectedSat) {
           const path = generateInertialOrbitPath(selectedSat, currentDate);
           setOrbits([path]);
-          console.log(
-            `[SatelliteViewer] Generated orbital path for ${selectedSat.name}`
-          );
         }
       } else {
         setOrbits([]);
